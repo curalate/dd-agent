@@ -523,6 +523,11 @@ def get_config(parse_args=True, cfg_path=None, options=None, can_query_registry=
             if config.has_option('Main', 'statsd_forward_port'):
                 agentConfig['statsd_forward_port'] = int(config.get('Main', 'statsd_forward_port'))
 
+        if config.has_option("Main", "dogstatsd_remove_host_tag"):
+            agentConfig["dogstatsd_remove_host_tag"] = _is_affirmative(config.get("Main", "dogstatsd_remove_host_tag"))
+        else:
+            agentConfig["dogstatsd_remove_host_tag"] = False
+
         # Optional config
         # FIXME not the prettiest code ever...
         if config.has_option('Main', 'use_mount'):

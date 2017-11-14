@@ -204,9 +204,10 @@ class Reporter(threading.Thread):
     server.
     """
 
-    def __init__(self, interval, metrics_aggregator, api_host, api_key=None,
+    def __init__(self, agent_config, interval, metrics_aggregator, api_host, api_key=None,
                  use_watchdog=False, event_chunk_size=None):
         threading.Thread.__init__(self)
+        self.agent_config = agent_config
         self.interval = int(interval)
         self.finished = threading.Event()
         self.metrics_aggregator = metrics_aggregator
@@ -231,6 +232,9 @@ class Reporter(threading.Thread):
         log.info("Reporting to %s every %ss" % (self.api_host, self.interval))
         log.debug("Watchdog enabled: %s" % bool(self.watchdog))
 
+        if self.agent_config["dogstatsd_remove_host_tag"]:
+            log.info("Not sending distinct host tags for every metric")
+
         # Persist a start-up message.
         DogstatsdStatus().persist()
 
@@ -252,7 +256,8 @@ class Reporter(threading.Thread):
             packets_per_second = self.metrics_aggregator.packets_per_second(self.interval)
             packet_count = self.metrics_aggregator.total_count
 
-            metrics = self.metrics_aggregator.flush()
+            metrics = self._format_tags(self.metrics_aggregator.flush())
+
             count = len(metrics)
             if self.flush_count % FLUSH_LOGGING_PERIOD == 0:
                 self.log_count = 0
@@ -353,6 +358,21 @@ class Reporter(threading.Thread):
         url = '{0}/api/v1/check_run?{1}'.format(self.api_host, urlencode(params))
         self.submit_http(url, json.dumps(service_checks), headers)
 
+    def _format_tags(self, metrics):
+        """Utility method used to strip out or override any tags on metrics received via
+        dogstatsd"""
+
+        if not self.agent_config['dogstatsd_remove_host_tag']:
+            return metrics
+
+        for metric in metrics:
+            if 'tags' in metric:
+                if metric['tags']:
+                    metric['tags'] = metric['tags'] + ('host:',)
+                else:
+                    metric['tags'] = ('host:',)
+
+        return metrics
 
 class Server(object):
     """
@@ -617,7 +637,7 @@ def init5(agent_config=None, use_watchdog=False, use_forwarder=False, args=None)
     )
 
     # Start the reporting thread.
-    reporter = Reporter(interval, aggregator, target, api_key, use_watchdog, event_chunk_size)
+    reporter = Reporter(agent_config, interval, aggregator, target, api_key, use_watchdog, event_chunk_size)
 
     # NOTICE: when `non_local_traffic` is passed we need to bind to any interface on the box. The forwarder uses
     # Tornado which takes care of sockets creation (more than one socket can be used at once depending on the
