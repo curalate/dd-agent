@@ -235,6 +235,9 @@ class Reporter(threading.Thread):
         if self.agent_config["dogstatsd_remove_host_tag"]:
             log.info("Not sending distinct host tags for every metric")
 
+        if self.agent_config["dogstatsd_blacklist_tags_re"]:
+            log.info("Filtering tags with the following regex: {}".format(self.agent_config["dogstatsd_blacklist_tags_re"].pattern))
+
         # Persist a start-up message.
         DogstatsdStatus().persist()
 
@@ -362,15 +365,22 @@ class Reporter(threading.Thread):
         """Utility method used to strip out or override any tags on metrics received via
         dogstatsd"""
 
-        if not self.agent_config['dogstatsd_remove_host_tag']:
+        if not self.agent_config['dogstatsd_remove_host_tag'] and not self.agent_config['dogstatsd_blacklist_tags_re']:
             return metrics
 
         for metric in metrics:
-            if 'tags' in metric:
-                if metric['tags']:
-                    metric['tags'] = metric['tags'] + ('host:',)
-                else:
-                    metric['tags'] = ('host:',)
+            if 'tags' not in metric:
+                continue
+
+            if not metric['tags']:
+                metric['tags'] = ()
+
+            if self.agent_config['dogstatsd_blacklist_tags_re']:
+                r = self.agent_config['dogstatsd_blacklist_tags_re']
+                metric['tags'] = filter(lambda t: not r.match(t), metric['tags'])
+
+            if self.agent_config['dogstatsd_remove_host_tag']:
+                metric['tags'] = metric['tags'] + ('host:',)
 
         return metrics
 
