@@ -183,6 +183,9 @@ gce_updated_hostname: yes
 # here: https://help.datadoghq.com/hc/en-us/articles/218349043-How-to-remove-the-host-tag-when-submitting-metrics-via-dogstatsD
 # dogstatsd_remove_host_tag: false
 #
+# Regex to use to filter out unwanted tags.
+# dogstatsd_blacklist_tags_re: .*
+#
 # If you want to forward every packet received by the dogstatsd server
 # to another statsd server, uncomment these lines.
 # WARNING: Make sure that forwarded packets are regular statsd packets and not "dogstatsd" packets,

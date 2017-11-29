@@ -528,6 +528,11 @@ def get_config(parse_args=True, cfg_path=None, options=None, can_query_registry=
         else:
             agentConfig["dogstatsd_remove_host_tag"] = False
 
+        if config.has_option("Main", "dogstatsd_blacklist_tags_re"):
+            agentConfig["dogstatsd_blacklist_tags_re"] = re.compile(config.get("Main", "dogstatsd_blacklist_tags_re"))
+        else:
+            agentConfig["dogstatsd_blacklist_tags_re"] = None
+
         # Optional config
         # FIXME not the prettiest code ever...
         if config.has_option('Main', 'use_mount'):
