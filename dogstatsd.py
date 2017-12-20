@@ -232,8 +232,8 @@ class Reporter(threading.Thread):
         log.info("Reporting to %s every %ss" % (self.api_host, self.interval))
         log.debug("Watchdog enabled: %s" % bool(self.watchdog))
 
-        if self.agent_config["dogstatsd_remove_host_tag"]:
-            log.info("Not sending distinct host tags for every metric")
+        if self.agent_config["dogstatsd_remove_aws_resource_tags"]:
+            log.info("Not sending AWS resource tags for every metric")
 
         if self.agent_config["dogstatsd_blacklist_tags_re"]:
             log.info("Filtering tags with the following regex: {}".format(self.agent_config["dogstatsd_blacklist_tags_re"].pattern))
@@ -365,7 +365,7 @@ class Reporter(threading.Thread):
         """Utility method used to strip out or override any tags on metrics received via
         dogstatsd"""
 
-        if not self.agent_config['dogstatsd_remove_host_tag'] and not self.agent_config['dogstatsd_blacklist_tags_re']:
+        if not self.agent_config['dogstatsd_remove_aws_resource_tags'] and not self.agent_config['dogstatsd_blacklist_tags_re']:
             return metrics
 
         for metric in metrics:
@@ -379,8 +379,8 @@ class Reporter(threading.Thread):
                 r = self.agent_config['dogstatsd_blacklist_tags_re']
                 metric['tags'] = filter(lambda t: not r.match(t), metric['tags'])
 
-            if self.agent_config['dogstatsd_remove_host_tag']:
-                metric['tags'] = metric['tags'] + ('host:',)
+            if self.agent_config['dogstatsd_remove_aws_resource_tags']:
+                metric['tags'] = metric['tags'] + ('autoscaling_group:', 'availability-zone:', 'build_number:', 'elasticbeanstalk:', 'host:', 'image:', 'instance-type:', 'region:', 'security-group:')
 
         return metrics
 

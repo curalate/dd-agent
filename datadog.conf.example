@@ -178,10 +178,10 @@ gce_updated_hostname: yes
 # to https://app.datadoghq.com.
 # dogstatsd_target: http://localhost:17123
 
-# Enabling this will send a dummy host: tag for every metric submitted to dogstatsd.
-# This is useful for trying to reduce the number of tags for a given metric. More information
+# Enabling this will send an empty value ("") for AWS resource tags submitted to dogstatsd.
+# This is useful for reducing the number of tags for a given metric. More information
 # here: https://help.datadoghq.com/hc/en-us/articles/218349043-How-to-remove-the-host-tag-when-submitting-metrics-via-dogstatsD
-# dogstatsd_remove_host_tag: false
+# dogstatsd_remove_aws_resource_tags: false
 #
 # Regex to use to filter out unwanted tags.
 # dogstatsd_blacklist_tags_re: .*
