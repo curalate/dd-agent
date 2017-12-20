@@ -523,10 +523,10 @@ def get_config(parse_args=True, cfg_path=None, options=None, can_query_registry=
             if config.has_option('Main', 'statsd_forward_port'):
                 agentConfig['statsd_forward_port'] = int(config.get('Main', 'statsd_forward_port'))
 
-        if config.has_option("Main", "dogstatsd_remove_host_tag"):
-            agentConfig["dogstatsd_remove_host_tag"] = _is_affirmative(config.get("Main", "dogstatsd_remove_host_tag"))
+        if config.has_option("Main", "dogstatsd_remove_aws_resource_tags"):
+            agentConfig["dogstatsd_remove_aws_resource_tags"] = _is_affirmative(config.get("Main", "dogstatsd_remove_aws_resource_tags")) || _is_affirmative(config.get("Main", "dogstatsd_remove_host_tag"))
         else:
-            agentConfig["dogstatsd_remove_host_tag"] = False
+            agentConfig["dogstatsd_remove_aws_resource_tags"] = False
 
         if config.has_option("Main", "dogstatsd_blacklist_tags_re"):
             agentConfig["dogstatsd_blacklist_tags_re"] = re.compile(config.get("Main", "dogstatsd_blacklist_tags_re"))
